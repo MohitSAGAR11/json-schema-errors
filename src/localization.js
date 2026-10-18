@@ -1,5 +1,5 @@
 import { translations } from "./translations/index.js";
-import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { FluentBundle, FluentNumber, FluentResource } from "@fluent/bundle";
 
 /**
  * @import { FluentVariable} from "@fluent/bundle"
@@ -106,10 +106,15 @@ export class Localization {
    * @type (messageId: string, args?: Record<string, FluentVariable>) => string
    */
   format(messageId, args = {}) {
+    // Fluent rounds to three fractional digits by default, which would display
+    // a value like 0.0000001 as 0.
+    const localizedArgs = Object.fromEntries(Object.entries(args).map(([name, value]) => [
+      name, typeof value === "number" ? new FluentNumber(value, { maximumSignificantDigits: 21 }) : value
+    ]));
     for (const bundle of [this.bundle, getBundle(DEFAULT_LOCALE)]) {
       const message = bundle?.getMessage(messageId);
       if (bundle && message?.value) {
-        return bundle.formatPattern(message.value, args);
+        return bundle.formatPattern(message.value, localizedArgs);
       }
     }
 

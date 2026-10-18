@@ -82,6 +82,231 @@
           "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
         }
       ]
+    },
+    {
+      "description": "integer multipleOf constraints both fail",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 2 },
+          { "multipleOf": 3 }
+        ]
+      },
+      "instance": 5,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "6" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "multipleOf constraints in reverse order are partially satisfied",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 3 },
+          { "multipleOf": 2 }
+        ]
+      },
+      "instance": 9,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "6" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "equal decimal multipleOf constraints",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 0.2 },
+          { "multipleOf": 0.2 }
+        ]
+      },
+      "instance": 0.3,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "0.2" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "decimal multipleOf constraints have different precisions",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 0.06 },
+          { "multipleOf": 0.15 }
+        ]
+      },
+      "instance": 0.1,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "0.3" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "decimal multipleOf constraints avoid scaling roundoff",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 0.07 },
+          { "multipleOf": 0.1 }
+        ]
+      },
+      "instance": 0.11,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "0.7" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "three decimal multipleOf constraints",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 0.2 },
+          { "multipleOf": 0.3 },
+          { "multipleOf": 0.7 }
+        ]
+      },
+      "instance": 0.1,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "4.2" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf", "#/allOf/2/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "multipleOf constraints pass together",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 2 },
+          { "multipleOf": 3 }
+        ]
+      },
+      "instance": 6,
+      "errors": []
+    },
+    {
+      "description": "decimal multipleOf constraints pass together",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 0.2 },
+          { "multipleOf": 0.3 }
+        ]
+      },
+      "instance": 0.6,
+      "errors": []
+    },
+    {
+      "description": "scientific notation multipleOf constraints",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 4e-7 },
+          { "multipleOf": 6e-7 }
+        ]
+      },
+      "instance": 1e-6,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "0.0000012" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf", "#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "scientific notation multipleOf constraints pass together",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 1e-07 },
+          { "multipleOf": 2e-07 }
+        ]
+      },
+      "instance": 2e-07,
+      "errors": []
+    },
+    {
+      "description": "multipleOf constraints at nested locations are partially satisfied",
+      "schema": {
+        "properties": {
+          "amount": {
+            "multipleOf": 0.2,
+            "allOf": [
+              { "multipleOf": 0.3 },
+              { "allOf": [{ "multipleOf": 0.04 }] }
+            ]
+          }
+        }
+      },
+      "instance": { "amount": 0.3 },
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "0.6" },
+          "instanceLocation": "#/amount",
+          "schemaLocations": ["#/properties/amount/multipleOf", "#/properties/amount/allOf/0/multipleOf", "#/properties/amount/allOf/1/allOf/0/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "multipleOf constraints with an unrepresentable LCM report both failures",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 9007199254740991 },
+          { "multipleOf": 3 }
+        ]
+      },
+      "instance": 1,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "9,007,199,254,740,991" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf"]
+        },
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "3" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/1/multipleOf"]
+        }
+      ]
+    },
+    {
+      "description": "multipleOf constraints with an unrepresentable LCM report only failures",
+      "schema": {
+        "allOf": [
+          { "multipleOf": 9007199254740991 },
+          { "multipleOf": 3 }
+        ]
+      },
+      "instance": 3,
+      "errors": [
+        {
+          "messageId": "multipleOf-message",
+          "messageParams": { "multipleOf": "9,007,199,254,740,991" },
+          "instanceLocation": "#",
+          "schemaLocations": ["#/allOf/0/multipleOf"]
+        }
+      ]
     }
   ]
 }

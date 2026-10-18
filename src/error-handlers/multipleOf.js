@@ -11,32 +11,41 @@ const multipleOfErrorHandler = {
     /** @type ErrorObject[] */
     const errors = [];
 
-    /** @type (number | null) */
-    let combinedMultipleOf = null;
+    /** @type number[] */
+    const multiples = [];
     /** @type string[] */
     const schemaLocations = [];
-    let hasError = false;
 
     for (const schemaLocation in normalizedErrors["https://json-schema.org/keyword/multipleOf"]) {
+      const multipleOf = /** @type number */ (normalizedErrors["https://json-schema.org/keyword/multipleOf"][schemaLocation].value);
       if (normalizedErrors["https://json-schema.org/keyword/multipleOf"][schemaLocation].valid === false) {
-        hasError = true;
+        errors.push({
+          message: context.localization.getMultipleOfErrorMessage(multipleOf),
+          instanceLocation: Instance.uri(instance),
+          schemaLocations: [schemaLocation]
+        });
       }
 
-      const multipleOf = /** @type number */ (normalizedErrors["https://json-schema.org/keyword/multipleOf"][schemaLocation].value);
-
-      combinedMultipleOf = combinedMultipleOf === null ? multipleOf : lcm(combinedMultipleOf, multipleOf);
+      multiples.push(multipleOf);
       schemaLocations.push(schemaLocation);
     }
 
-    if (combinedMultipleOf !== null && hasError) {
-      errors.push({
-        message: context.localization.getMultipleOfErrorMessage(combinedMultipleOf),
-        instanceLocation: Instance.uri(instance),
-        schemaLocations
-      });
+    if (errors.length === 0 || multiples.length === 1) {
+      return errors;
     }
 
-    return errors;
+    const combinedMultipleOf = lcm(multiples);
+    // If the LCM can't be computed exactly, describe the original failing
+    // constraints instead.
+    if (combinedMultipleOf === null) {
+      return errors;
+    }
+
+    return [{
+      message: context.localization.getMultipleOfErrorMessage(combinedMultipleOf),
+      instanceLocation: Instance.uri(instance),
+      schemaLocations
+    }];
   },
 
   success: (normalizedOutput, instance, context) => {
@@ -46,42 +55,32 @@ const multipleOfErrorHandler = {
   }
 };
 
-/**
- * @param {number} value
- * @returns {number}
- */
-const countDecimals = (value) => value.toString().split(".")[1]?.length || 0;
-
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-const gcd = (a, b) => {
-  const m = 10 ** Math.max(countDecimals(a), countDecimals(b));
-  let x = Math.round(a * m);
-  let y = Math.round(b * m);
-
-  while (y !== 0) {
-    const temp = y;
-    y = x % y;
-    x = temp;
-  }
-
-  return Math.abs(x) / m;
+/** @type (value: number) => number */
+const countDecimals = (value) => {
+  const [mantissa, exponent = "0"] = value.toString().split("e");
+  return Math.max((mantissa.split(".")[1]?.length ?? 0) - Number(exponent), 0);
 };
 
-/**
- * @param {number} a
- * @param {number} b
- * @returns {number}
- */
-const lcm = (a, b) => {
-  const m = 10 ** Math.max(countDecimals(a), countDecimals(b));
-  const x = Math.round(a * m);
-  const y = Math.round(b * m);
+/** @type (a: number, b: number) => number */
+const gcd = (a, b) => b === 0 ? Math.abs(a) : gcd(b, a % b);
 
-  return Math.abs(x * y) / (gcd(x, y) * m);
+/** @type (multiples: number[]) => number | null */
+const lcm = (multiples) => {
+  const m = 10 ** Math.max(...multiples.map(countDecimals));
+  let combined = 1;
+  for (const multiple of multiples) {
+    const integer = Math.round(multiple * m);
+    if (!Number.isSafeInteger(integer)) {
+      return null;
+    }
+
+    combined = Math.abs(combined / gcd(combined, integer) * integer);
+    if (!Number.isSafeInteger(combined)) {
+      return null;
+    }
+  }
+
+  return combined / m;
 };
 
 export default multipleOfErrorHandler;

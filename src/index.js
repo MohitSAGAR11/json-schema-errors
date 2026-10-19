@@ -153,6 +153,14 @@ defineKeyword("https://json-schema.org/keyword/uniqueItems", {});
 defineKeyword("https://json-schema.org/keyword/unknown", { annotation: true });
 defineKeyword("https://json-schema.org/keyword/writeOnly", { annotation: true });
 
+// OpenAPI keywords
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/discriminator", { annotation: true });
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/example", { annotation: true });
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/externalDocs", { annotation: true });
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/nullable", { annotation: true });
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/type", {});
+defineKeyword("https://spec.openapis.org/oas/3.0/keyword/xml", { annotation: true });
+
 export {
   allTrue,
   countTrue,
